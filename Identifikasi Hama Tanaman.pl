@@ -1,0 +1,120 @@
+% Aturan 1: Kutu daun (aphids)
+hama(kutu_daun) :-
+    gejala(daun_menguning),
+    gejala(tanaman_layu),
+    \+ gejala(daun_berlubang),
+    \+ gejala(bercak_hitam).
+
+% Aturan 2: Ulat daun
+hama(ulat_daun) :-
+    gejala(daun_berlubang),
+    \+ gejala(daun_menguning),
+    \+ gejala(bercak_hitam).
+
+% Aturan 3: Jamur/Fungi
+hama(jamur) :-
+    gejala(bercak_hitam),
+    gejala(daun_menguning),
+    \+ gejala(daun_berlubang).
+
+% Aturan 4: Busuk akar
+hama(busuk_akar) :-
+    gejala(tanaman_layu),
+    \+ gejala(daun_menguning),
+    \+ gejala(bercak_hitam),
+    \+ gejala(daun_berlubang).
+
+% Aturan 5: Tungau
+hama(tungau) :-
+    gejala(bercak_hitam),
+    gejala(daun_menguning),
+    gejala(daun_berlubang).
+
+% Rekomendasi penanganan untuk setiap jenis hama
+rekomendasi(kutu_daun, [
+    'Semprotkan larutan sabun insektisida',
+    'Gunakan predator alami seperti kumbang koksi',
+    'Aplikasikan minyak neem'
+]).
+
+rekomendasi(ulat_daun, [
+    'Penyemprotan Bacillus thuringiensis (Bt)',
+    'Pengumpulan manual ulat',
+    'Pemanfaatan predator alami'
+]).
+
+rekomendasi(jamur, [
+    'Aplikasikan fungisida',
+    'Kurangi kelembaban di sekitar tanaman',
+    'Singkirkan daun yang terinfeksi'
+]).
+
+rekomendasi(busuk_akar, [
+    'Perbaiki drainase tanah',
+    'Kurangi frekuensi penyiraman',
+    'Aplikasikan fungisida sistemik'
+]).
+
+rekomendasi(tungau, [
+    'Semprotkan air bertekanan tinggi',
+    'Aplikasikan akarisida',
+    'Gunakan predator alami seperti tungau predator'
+]).
+
+% Gejala khas masing-masing hama
+gejala_hama(kutu_daun, [daun_menguning, tanaman_layu]).
+gejala_hama(ulat_daun, [daun_berlubang]).
+gejala_hama(jamur, [bercak_hitam, daun_menguning]).
+gejala_hama(busuk_akar, [tanaman_layu]).
+gejala_hama(tungau, [bercak_hitam, daun_menguning, daun_berlubang]).
+
+% Menampilkan gejala dari hama tertentu
+tampilkan_gejala(Hama) :-
+    gejala_hama(Hama, GejalaList),
+    format('Gejala khas untuk hama ~w adalah:~n', [Hama]),
+    cetak_rekomendasi(GejalaList, 1).
+
+% Predikat untuk mendiagnosis hama tanaman
+diagnosis :-
+    write('Sistem Pakar Identifikasi Hama Tanaman'), nl,
+    write('======================================'), nl,
+    retractall(gejala(_)),  % Hapus semua gejala dari basis pengetahuan
+
+    % Tanyakan gejala
+    tanya_gejala(daun_menguning),
+    tanya_gejala(bercak_hitam),
+    tanya_gejala(daun_berlubang),
+    tanya_gejala(tanaman_layu),
+
+    % Identifikasi hama
+    identifikasi_hama.
+
+% Predikat untuk bertanya tentang gejala
+tanya_gejala(Gejala) :-
+    format('Apakah terdapat gejala ~w? (ya/tidak): ', [Gejala]),
+    read(Jawaban),
+    (Jawaban = ya -> assert(gejala(Gejala)); true).
+
+% Predikat untuk identifikasi hama
+identifikasi_hama :-
+    hama(JenisHama),
+    format('Tanaman Anda kemungkinan terserang: ~w~n', [JenisHama]),
+    write('Rekomendasi penanganan:'), nl,
+    rekomendasi(JenisHama, Rekomendasi),
+    cetak_rekomendasi(Rekomendasi, 1),
+    !.  % Cut untuk menghentikan backtracking setelah solusi pertama ditemukan
+
+identifikasi_hama :-
+    write('Tidak dapat mengidentifikasi jenis hama berdasarkan gejala yang dimasukkan.'), nl,
+    write('Silakan konsultasikan dengan ahli pertanian terdekat.').
+
+% Predikat untuk mencetak rekomendasi
+cetak_rekomendasi([], _).
+cetak_rekomendasi([H|T], N) :-
+    format('~w. ~w~n', [N, H]),
+    N1 is N + 1,
+    cetak_rekomendasi(T, N1).
+
+% Memulai diagnosis
+:- dynamic gejala/1.
+:- initialization(diagnosis).
